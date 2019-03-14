@@ -52,6 +52,7 @@ class Transaction extends Component {
   makeRemoteRequest = () => {
     AsyncStorage.getItem('transID').then((value) => {
       if(value !== null){
+        console.warn(value)
         const url = 'http://portal.bafsta.com.ng/api/order/precart/'+value;
         this.setState({ loading: true });
     

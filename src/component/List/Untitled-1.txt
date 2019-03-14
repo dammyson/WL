@@ -1,0 +1,31 @@
+
+          this.setState({ loadan: true})
+        const {ItemCode, phone, add_quantity, transaction_id} = this.state
+
+        fetch('http://portal.bafsta.com.ng/api/order', { method: 'POST',  headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        }, body: JSON.stringify({
+          product_code: ItemCode,
+          quantity: add_quantity,
+          seller_phone: phone,
+          transaction_id: transaction_id,
+
+        }), 
+        })
+        .then(res => res.json())
+        .then(res => {
+
+        if(res.status){
+
+        this.setState({ loadan: false})
+        Alert.alert('Success', res.message, [{text: 'Okay'}])
+        this.props.navigation.navigate('ProductsList')
+
+
+        }else{
+          this.setState({ loadan: false})
+        Alert.alert('Operation failed', res.message, [{text: 'Okay'}])
+
+        }
+        })

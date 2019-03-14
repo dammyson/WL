@@ -12,14 +12,14 @@ import OrderList from '../List/OrderList';
 
 const AppNavigator = createStackNavigator({
 
- /* Login: {screen: Login,
+  Login: {screen: Login,
     navigationOptions: {
       header:null        // this will do your task
     }},
   Home: {screen: Home,
     navigationOptions: {
       header:null        // this will do your task
-    }}, */
+    }}, 
     ProductsList: {screen: ProductsList},
     Landing: {screen: Landing},
     Transaction: {screen: Transaction},

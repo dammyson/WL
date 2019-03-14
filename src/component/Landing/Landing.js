@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import { StyleSheet, KeyboardAvoidingView, ScrollView, Alert,AsyncStorage, ActivityIndicator, Text, View, Image,ImageBackground, Dimensions, TextInput,TouchableOpacity } from 'react-native';
+import { StyleSheet, KeyboardAvoidingView,FlatList, ScrollView, Alert,AsyncStorage, ActivityIndicator, Text, View, Image,ImageBackground, Dimensions, TextInput,TouchableOpacity } from 'react-native';
 import { Card, ListItem, Button, Icon } from 'react-native-elements'
 import { FontAwesome, AntDesign, Foundation } from '@expo/vector-icons';
 import Loader from '../Loader/loader';
@@ -10,6 +10,8 @@ export default class Landing extends Component {
   };
   constructor(){
   super()
+
+
   this.state={
     loadan: false,
     userLevel: 1,
@@ -23,7 +25,9 @@ export default class Landing extends Component {
     phone:'',
     add_quantity:'',
     transaction_id:'',
-
+    input:'',
+    data: [],
+    shareholders: []
   }
 
 }
@@ -43,38 +47,36 @@ componentDidMount = () =>{
 
 
 AddtoCart(){
- 
-
   this.setState({ loadan: true})
-const {ItemCode, phone, add_quantity, transaction_id} = this.state
+  const {ItemCode, phone, transaction_id, shareholders} = this.state
 
-fetch('http://portal.bafsta.com.ng/api/order', { method: 'POST',  headers: {
-Accept: 'application/json',
-'Content-Type': 'application/json',
-}, body: JSON.stringify({
-  product_code: ItemCode,
-  quantity: add_quantity,
-  seller_phone: phone,
-  transaction_id: transaction_id,
+  fetch('http://portal.bafsta.com.ng/api/order', { method: 'POST',  headers: {
+  Accept: 'application/json',
+  'Content-Type': 'application/json',
+  }, body: JSON.stringify({
+    product_code: ItemCode,
+    seller_phone: phone,
+    transaction_id: transaction_id,
+    products: shareholders,
 
-}), 
-})
-.then(res => res.json())
-.then(res => {
+  }), 
+  })
+  .then(res => res.json())
+  .then(res => {
 
-if(res.status){
+  if(res.status){
 
-this.setState({ loadan: false})
-Alert.alert('Success', res.message, [{text: 'Okay'}])
-this.props.navigation.navigate('ProductsList')
-
-
-}else{
   this.setState({ loadan: false})
-Alert.alert('Operation failed', res.message, [{text: 'Okay'}])
+  Alert.alert('Success', res.message, [{text: 'Okay'}])
+  this.props.navigation.navigate('ProductsList')
 
-}
-})
+
+  }else{
+    this.setState({ loadan: false})
+  Alert.alert('Operation failed', res.message, [{text: 'Okay'}])
+
+  }
+  })
 
 
           
@@ -82,16 +84,11 @@ Alert.alert('Operation failed', res.message, [{text: 'Okay'}])
 
 
 
-
-
-
-
-
 makeRemoteRequest = () => {
  
 
 
-  const url = 'http://portal.bafsta.com.ng/api/products/'+ this.props.navigation.getParam("ItemCode", "defaultValue")
+  const url = 'http://portal.bafsta.com.ng/api/products_details/'+ this.props.navigation.getParam("ItemCode", "defaultValue")
 
   
   this.setState({ loading: true });
@@ -106,12 +103,12 @@ makeRemoteRequest = () => {
     .then(res => {
 
       this.setState({
-        ItemName:res.data.name,
+        ItemName:res.data[0].name,
         ItemPrice:res.data.amount,
         Size: res.data.size,
         Quantity: res.data.avail_qty,
         image: res.data.base64image,
-
+        data:res.data,
 
         loading: false,
       });
@@ -123,6 +120,21 @@ makeRemoteRequest = () => {
     });
 };
 
+
+
+onchange = (e, i) =>{
+
+  
+ this.state.shareholders.push({ quantity: i,  size: e, });
+
+console.warn(this.handleCheck(e))
+}
+
+handleCheck(val) {
+  
+  return this.state.shareholders.some(item => val === item.size);
+
+ }
 
 
 render() {
@@ -138,31 +150,6 @@ render() {
 
 
 
-  let ops=[]
-for (let i=0; i <5; i++){
-ops.push(
-  <View key={i} style={styles.detailsContainer}>
-       <Text style={styles.headText} >Blue</Text>
-       <Text style={styles.headText} >34</Text>
-
-       <View style={styles.conput}>       
-       <TextInput
-            placeholder= "qty"
-            placeholderTextColor= 'rgba(255,255,255,0.7)'
-            returnKeyType= "go"
-            keyboardType = "numeric"
-            maxLength={3}
-            style = {styles.input}
-            ref={(input)=> this.passwordInput = input}
-            onChangeText = {text => this.setState({add_quantity: text})}
-            />
-
-</View>
-         </View>
-)  
-}
-
-
 return (
 <ImageBackground
 source={require('../../images/background.png')}
@@ -176,12 +163,9 @@ resizeMode="cover"
 
 <ScrollView>
 
-
             <KeyboardAvoidingView behavior="padding" style = {styles.container}> 
 
             <View style={styles.up}>
-                
-
             <Image 
             style={styles.productImage}
             source={{uri: 'data:image/png;base64,'+this.state.image}}
@@ -198,16 +182,14 @@ resizeMode="cover"
             <View style={styles.cardView}>
 
             <Text style={styles.cardText} >{this.state.ItemName}</Text>
-            <Text style={styles.cardText} > Size: {this.state.Size} </Text>
-            <Text style={styles.cardText} >Quantity available: {this.state.Quantity} </Text>
-            <Text style={styles.cardText} >N {this.state.ItemPrice} </Text>
             <View style={styles.addcart}>
 
 
 <View style={styles.detailsContainer}>
-       <Text style={styles.headText} >Color </Text>
+       <Text style={styles.headText} >Size </Text>
        <Text style={styles.headText} >available qty</Text>
        <Text style={styles.headText} >desired qty</Text>
+       <Text style={styles.headText} >Price</Text>
 
          </View>
          <View
@@ -217,7 +199,38 @@ resizeMode="cover"
     margin:5
   }}
 />
-         {ops}
+      
+
+
+
+         <FlatList
+        style={{paddingBottom:20}}
+        data={this.state.data}
+        renderItem={({ item }) => (
+          <View style={styles.detailsContainer}>
+          <Text style={styles.headText} >{item.size}</Text>
+          <Text style={styles.headText} >{item.quantity}</Text>
+   
+          <View style={styles.conput}>       
+          <TextInput
+               placeholder= "qty"
+               placeholderTextColor= 'rgba(255,255,255,0.7)'
+               returnKeyType= "go"
+               keyboardType = "numeric"
+               maxLength={3}
+               style = {styles.input}
+               ref={(b)=> {this.add_quantity = b}}
+               onChangeText = {(e) => {this.onchange(item.size, e)}}
+               />
+   </View>
+   <Text style={styles.headText} >N:{item.amount}</Text>
+            </View>
+
+        )}
+        keyExtractor={item => item.size}
+        ItemSeparatorComponent={this.renderSeparator}
+        ListHeaderComponent={this.renderHeader}
+      />
 
 
 
@@ -257,11 +270,12 @@ headText:{
   flex: 1,
   textAlign:'center',
   color: "#fe0000",
-  fontWeight: '700'
+  fontWeight: '700',
+  marginLeft:20
 },
 conput:{
   flex:1,
-  marginRight:20
+  marginRight:10
 } ,
 detailsContainer: {
     flex: 7,
@@ -285,7 +299,7 @@ buttonText:{
 },
 input:{
   height:40,
-  width:80,
+  width:50,
   backgroundColor: 'rgba(255, 0, 0, 0.4)',
   marginBottom:10,
   color: '#FFF',
@@ -324,13 +338,14 @@ add:{
 
 cardText:{
   textAlign:'center',
-  color: "#fe0000",
+  color: "black",
   fontWeight: '700'
 },
 
 cardView:{
   width: Dimensions.get('window').width,
-marginBottom:100
+marginBottom:100,
+paddingRight:20
 },
 row:{
   flex:1,
