@@ -149,7 +149,7 @@ class OrderList extends Component {
       })}
       >
           <ListItem
-            title={<Text style = {styles.title}>Txn ID: {item.transaction_id.toUpperCase() }</Text>}
+            title={<Text style = {styles.title}>Txn  YEdID: {item.transaction_id.toUpperCase() }</Text>}
             subtitle={
 
               <View>
